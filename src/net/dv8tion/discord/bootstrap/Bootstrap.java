@@ -2,13 +2,15 @@ package net.dv8tion.discord.bootstrap;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class Bootstrap
 {
     public static final String BOT_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Discord-Bot/files/target/Yui-LATEST.jar";
     public static final String VERSION = "1.0.0";
-    public static final String OLD_VERSION_STORAGE = "./old/";
     public static final File BOT_JAR_FILE = new File("./Yui.jar");
+    public static final File BOT_JAR_FILE_OLD = new File("OLD_" + BOT_JAR_FILE.getName());
 
     public static final int NORMAL_SHUTDOWN = 10;
     public static final int UPDATE_EXITCODE = 20;
@@ -18,24 +20,54 @@ public class Bootstrap
     public static final int NO_USERNAME_PASS_COMBO = 24;
 
     public static final int UNKNOWN_EXITCODE = 50;
+    public static final int DOWNLOAD_FAILED = 51;
+    public static final int UPDATED_FAILED = 52;
 
-    public static final String[]  START_BOT_COMMAND = new String[] {
+    public static final String[] START_BOT_COMMAND = new String[] {
         "java", "-Dfile.encoding=UTF-8", "-jar", BOT_JAR_FILE.getPath()
     };
+
+    enum UpdateStatus
+    {
+        SUCCESSFUL("successful"), FAILED("failed"), NONE("");
+
+        private String commandArg;
+        UpdateStatus(String commandArg)
+        {
+            this.commandArg = commandArg;
+        }
+
+        @Override
+        public String toString()
+        {
+            return commandArg;
+        }
+    }
 
     public static void main(String[] args) throws IOException, InterruptedException
     {        
         if (!BOT_JAR_FILE.exists())
-            downloadBot();
+        {
+            if (!downloadBot())
+            {
+                System.out.println("Could not download Bot. Check Internet Connection and File System.");
+                System.exit(DOWNLOAD_FAILED);
+            }
+        }
 
         System.out.println("Starting the Bootstrap Launch loop");
-        boolean exit = false;
-        while (!exit)
+        UpdateStatus updateStatus = UpdateStatus.NONE;
+        while (true)
         {
             ProcessBuilder builder = new ProcessBuilder();
             builder.environment().put("BootstrapVersion", VERSION);
-            builder.command(START_BOT_COMMAND);
             builder.inheritIO();
+            builder.command(START_BOT_COMMAND);
+            if (!updateStatus.equals(UpdateStatus.NONE))
+            {
+                builder.command().add(updateStatus.toString());
+                updateStatus = UpdateStatus.NONE;
+            }
 
             Process botProcess = builder.start();
             botProcess.waitFor();
@@ -46,7 +78,7 @@ public class Bootstrap
                     System.exit(0);
                     break;
                 case UPDATE_EXITCODE:
-                    updateBot();
+                    updateStatus = updateBot() ? UpdateStatus.SUCCESSFUL : UpdateStatus.FAILED;
                     break;
                 case NEWLY_CREATED_CONFIG:
                     //TODO: More to work on.
@@ -72,10 +104,33 @@ public class Bootstrap
 
     private static boolean updateBot()
     {
-        throw new UnsupportedOperationException("Feature not yet implemented.");
+        try
+        {
+            Files.move(
+                    BOT_JAR_FILE.toPath(),
+                    BOT_JAR_FILE_OLD.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING);
+            if (!downloadBot())
+            {
+                Files.move(
+                        BOT_JAR_FILE_OLD.toPath(),
+                        BOT_JAR_FILE.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("Encountered an error while downloading the updated Bot. Reverting to old version.");
+                return false;
+            }
+            System.out.println("Update Successful!");
+            return true;
+        }
+        catch (IOException e)
+        {
+            System.out.println("Encountered problem when trying to move the Bot jar file.");
+            e.printStackTrace();
+            return false;
+        }
     }
 
-    private static boolean downloadBot() throws InterruptedException
+    private static boolean downloadBot()
     {
         for (int i = 0; i < 3 && !BOT_JAR_FILE.exists(); i++)
         {
@@ -90,7 +145,7 @@ public class Bootstrap
                 {
                     System.out.println("Failed to download the Bot, Will wait 5 second and try again.");
                     Thread.sleep(5000);
-                    System.out.printf("Attempting to download bot, Attempt #%d, Please wait...", (i + 1));
+                    System.out.printf("Attempting to download bot, Attempt #%d, Please wait...\n", (i + 1));
                     Downloader.file(BOT_DOWNLOAD_URL, BOT_JAR_FILE.getPath());
                 }
                 if (BOT_JAR_FILE.exists())
@@ -99,7 +154,7 @@ public class Bootstrap
                     return true;
                 } 
             }
-            catch (IOException e)
+            catch (IOException | InterruptedException e)
             {
                 System.out.println("Encountered an IOError attempting to download the Bot.");
                 e.printStackTrace();
