@@ -10,9 +10,11 @@ public class Bootstrap
     public static final String OLD_VERSION_STORAGE = "./old/";
     public static final File BOT_JAR_FILE = new File("./Yui.jar");
 
-    public static final int UPDATE_EXITCODE = -255;
-    public static final int NEWLY_CREATED_CONFIG = -254;
-    public static final int UNABLE_TO_CONNECT_TO_DISCORD = -253;
+    public static final int UPDATE_EXITCODE = 20;
+    public static final int NEWLY_CREATED_CONFIG = 21;
+    public static final int UNABLE_TO_CONNECT_TO_DISCORD = 22;
+    public static final int BAD_USERNAME_PASS_COMBO = 23;
+    public static final int NO_USERNAME_PASS_COMBO = 24;
 
     public static final String[]  START_BOT_COMMAND = new String[] {
         "java", "-Dfile.encoding=UTF-8", "-jar", BOT_JAR_FILE.getPath()
@@ -24,7 +26,8 @@ public class Bootstrap
             downloadBot();
 
         System.out.println("Starting the Bootstrap Launch loop");
-        while (true)
+        boolean exit = false;
+        while (!exit)
         {
             ProcessBuilder builder = new ProcessBuilder();
             builder.environment().put("BootstrapVersion", VERSION);
@@ -41,8 +44,13 @@ public class Bootstrap
                 case NEWLY_CREATED_CONFIG:
                     //TODO: More to work on.
                     System.out.println("The config was created for the first time. Please input Email and Password values.");
+                    exit = true;
                     break;
                 case UNABLE_TO_CONNECT_TO_DISCORD:
+                    break;
+                case BAD_USERNAME_PASS_COMBO:
+                    break;
+                case NO_USERNAME_PASS_COMBO:
                     break;
                 default:
             }
