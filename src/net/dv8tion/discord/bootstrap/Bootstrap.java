@@ -10,11 +10,14 @@ public class Bootstrap
     public static final String OLD_VERSION_STORAGE = "./old/";
     public static final File BOT_JAR_FILE = new File("./Yui.jar");
 
+    public static final int NORMAL_SHUTDOWN = 10;
     public static final int UPDATE_EXITCODE = 20;
     public static final int NEWLY_CREATED_CONFIG = 21;
     public static final int UNABLE_TO_CONNECT_TO_DISCORD = 22;
     public static final int BAD_USERNAME_PASS_COMBO = 23;
     public static final int NO_USERNAME_PASS_COMBO = 24;
+
+    public static final int UNKNOWN_EXITCODE = 50;
 
     public static final String[]  START_BOT_COMMAND = new String[] {
         "java", "-Dfile.encoding=UTF-8", "-jar", BOT_JAR_FILE.getPath()
@@ -38,21 +41,31 @@ public class Bootstrap
             botProcess.waitFor();
             switch(botProcess.exitValue())
             {
+                case NORMAL_SHUTDOWN:
+                    System.out.println("The Bot requested to shutdown and not relaunch.\nShutting down...");
+                    System.exit(0);
+                    break;
                 case UPDATE_EXITCODE:
                     updateBot();
                     break;
                 case NEWLY_CREATED_CONFIG:
                     //TODO: More to work on.
                     System.out.println("The config was created for the first time. Please input Email and Password values.");
-                    exit = true;
+                    System.exit(NEWLY_CREATED_CONFIG);
                     break;
                 case UNABLE_TO_CONNECT_TO_DISCORD:
+                    System.exit(UNABLE_TO_CONNECT_TO_DISCORD);
                     break;
                 case BAD_USERNAME_PASS_COMBO:
+                    System.exit(BAD_USERNAME_PASS_COMBO);
                     break;
                 case NO_USERNAME_PASS_COMBO:
+                    System.exit(NO_USERNAME_PASS_COMBO);
                     break;
                 default:
+                    System.out.println("The Bot's Exit code was unrecognized. ExitCode: " + botProcess.exitValue());
+                    System.out.println("Shutting down now.");
+                    System.exit(UNKNOWN_EXITCODE);
             }
         }
     }
