@@ -13,6 +13,7 @@ public class Bootstrap
     public static final File BOT_JAR_FILE_OLD = new File("OLD_" + BOT_JAR_FILE.getName());
 
     public static final int NORMAL_SHUTDOWN = 10;
+    public static final int RESTART_EXITCODE = 19;
     public static final int UPDATE_EXITCODE = 20;
     public static final int NEWLY_CREATED_CONFIG = 21;
     public static final int UNABLE_TO_CONNECT_TO_DISCORD = 22;
@@ -76,6 +77,9 @@ public class Bootstrap
                 case NORMAL_SHUTDOWN:
                     System.out.println("The Bot requested to shutdown and not relaunch.\nShutting down...");
                     System.exit(0);
+                    break;
+                case RESTART_EXITCODE:
+                    System.out.println("Bot stopped due to restart request. Restarting...");
                     break;
                 case UPDATE_EXITCODE:
                     updateStatus = updateBot() ? UpdateStatus.SUCCESSFUL : UpdateStatus.FAILED;
