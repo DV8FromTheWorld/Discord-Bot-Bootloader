@@ -7,7 +7,7 @@ import java.nio.file.StandardCopyOption;
 
 public class Bootstrap
 {
-    public static final String BOT_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Discord-Bot/files/target/Yui-LATEST.jar";
+    public static final String BOT_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Yui/files/target/Yui-LATEST.jar";
     public static final String VERSION = "1.0.0";
     public static final File BOT_JAR_FILE = new File("./Yui.jar");
     public static final File BOT_JAR_FILE_OLD = new File("OLD_" + BOT_JAR_FILE.getName());
