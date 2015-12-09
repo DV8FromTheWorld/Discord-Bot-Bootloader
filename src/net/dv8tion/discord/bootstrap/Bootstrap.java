@@ -7,19 +7,28 @@ import java.nio.file.StandardCopyOption;
 
 public class Bootstrap
 {
-    public static final String BOT_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Yui/files/target/Yui-LATEST.jar";
+    public static final String RECOMMENDED_BUILD_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Yui/files/release/Yui-Recommended.jar";
+    public static final String BUILD_BUILD_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Yui/files/release/Yui-Latest.jar";
     public static final String VERSION = "1.0.0";
     public static final File BOT_JAR_FILE = new File("./Yui.jar");
     public static final File BOT_JAR_FILE_OLD = new File("OLD_" + BOT_JAR_FILE.getName());
 
+    // --  Yui specific exit codes --
+    //Non error, no action exit codes.
     public static final int NORMAL_SHUTDOWN = 10;
-    public static final int RESTART_EXITCODE = 19;
-    public static final int UPDATE_EXITCODE = 20;
-    public static final int NEWLY_CREATED_CONFIG = 21;
-    public static final int UNABLE_TO_CONNECT_TO_DISCORD = 22;
-    public static final int BAD_USERNAME_PASS_COMBO = 23;
-    public static final int NO_USERNAME_PASS_COMBO = 24;
+    public static final int RESTART_EXITCODE = 11;
+    public static final int NEWLY_CREATED_CONFIG = 12;
 
+    //Non error, action required exit codes.
+    public static final int UPDATE_LATEST_EXITCODE = 20;
+    public static final int UPDATE_RECOMMENDED_EXITCODE = 21;
+
+    //error exit codes.
+    public static final int UNABLE_TO_CONNECT_TO_DISCORD = 30;
+    public static final int BAD_USERNAME_PASS_COMBO = 31;
+    public static final int NO_USERNAME_PASS_COMBO = 32;
+
+    // -- Bootloader specific exit codes --
     public static final int UNKNOWN_EXITCODE = 50;
     public static final int DOWNLOAD_FAILED = 51;
     public static final int UPDATED_FAILED = 52;
@@ -49,7 +58,7 @@ public class Bootstrap
     {        
         if (!BOT_JAR_FILE.exists())
         {
-            if (!downloadBot())
+            if (!downloadBot(false))
             {
                 System.out.println("Could not download Bot. Check Internet Connection and File System.");
                 System.exit(DOWNLOAD_FAILED);
@@ -81,8 +90,9 @@ public class Bootstrap
                 case RESTART_EXITCODE:
                     System.out.println("Bot stopped due to restart request. Restarting...");
                     break;
-                case UPDATE_EXITCODE:
-                    updateStatus = updateBot() ? UpdateStatus.SUCCESSFUL : UpdateStatus.FAILED;
+                case UPDATE_LATEST_EXITCODE:
+                case UPDATE_RECOMMENDED_EXITCODE:
+                    updateStatus = updateBot(botProcess.exitValue()) ? UpdateStatus.SUCCESSFUL : UpdateStatus.FAILED;
                     break;
                 case NEWLY_CREATED_CONFIG:
                     //TODO: More to work on.
@@ -106,7 +116,7 @@ public class Bootstrap
         }
     }
 
-    private static boolean updateBot()
+    private static boolean updateBot(int updateCode)
     {
         try
         {
@@ -114,7 +124,7 @@ public class Bootstrap
                     BOT_JAR_FILE.toPath(),
                     BOT_JAR_FILE_OLD.toPath(),
                     StandardCopyOption.REPLACE_EXISTING);
-            if (!downloadBot())
+            if (!downloadBot(updateCode == UPDATE_LATEST_EXITCODE))
             {
                 Files.move(
                         BOT_JAR_FILE_OLD.toPath(),
@@ -134,8 +144,9 @@ public class Bootstrap
         }
     }
 
-    private static boolean downloadBot()
+    private static boolean downloadBot(boolean useBetaBuilds)
     {
+        String downloadUrl = useBetaBuilds ? BUILD_BUILD_DOWNLOAD_URL : RECOMMENDED_BUILD_DOWNLOAD_URL;
         for (int i = 0; i < 3 && !BOT_JAR_FILE.exists(); i++)
         {
             try
@@ -143,14 +154,14 @@ public class Bootstrap
                 if (i == 0)
                 {
                     System.out.println("Attempting to download the Bot, Please wait...");
-                    Downloader.file(BOT_DOWNLOAD_URL, BOT_JAR_FILE.getPath());
+                    Downloader.file(downloadUrl, BOT_JAR_FILE.getPath());
                 }
                 else
                 {
                     System.out.println("Failed to download the Bot, Will wait 5 second and try again.");
                     Thread.sleep(5000);
                     System.out.printf("Attempting to download bot, Attempt #%d, Please wait...\n", (i + 1));
-                    Downloader.file(BOT_DOWNLOAD_URL, BOT_JAR_FILE.getPath());
+                    Downloader.file(downloadUrl, BOT_JAR_FILE.getPath());
                 }
                 if (BOT_JAR_FILE.exists())
                 {
