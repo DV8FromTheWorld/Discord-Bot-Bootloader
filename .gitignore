@@ -1,6 +1,22 @@
+# intellij #
+/.idea/
+*.iml
+
+## eclipse ##
 /bin/
+/.settings/
+.classpath
+.project
+
+## gradle ##
+/build/
+/.gradle/
+
+## Yui ##
+*.db
 Config.json
+tokens.json
+
+## Yui-Bootloader ##
 Yui.jar
 OLD_Yui.jar
-yui.db
-target/

@@ -1,0 +1,15 @@
+apply plugin: 'idea'
+apply plugin: 'java'
+
+group = "net.dv8tion"
+archivesBaseName = "Yui-Bootloader"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+jar {
+    baseName = project.name
+    manifest {
+        attributes 'Main-Class': "net.dv8tion.discord.bootloader.Bootstrap"
+    }
+}

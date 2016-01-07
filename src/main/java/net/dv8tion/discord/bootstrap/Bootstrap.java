@@ -4,12 +4,17 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Bootstrap
 {
-    public static final String RECOMMENDED_BUILD_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Yui/files/release/Yui-Recommended.jar";
-    public static final String BUILD_BUILD_DOWNLOAD_URL = "https://drone.io/github.com/DV8FromTheWorld/Yui/files/release/Yui-Latest.jar";
-    public static final String VERSION = "1.0.0";
+
+    public static final String RECOMMENDED_BUILD_ROOT = "http://home.dv8tion.net:8080/job/Yui/Promoted%20Build/artifact/build/libs/";
+    public static final String BETA_BUILD_ROOT = "http://home.dv8tion.net:8080/job/Yui/lastCompletedBuild/artifact/build/libs/";
+    public static final String URL_REGEX = "\\<a href=\"Yui-withDependencies-[0-9]*\\.[0-9]*\\.[0-9]*_[0-9]*\\.jar\">(Yui-withDependencies-[0-9]*\\.[0-9]*\\.[0-9]*_[0-9]*\\.jar)\\<\\/a\\>";
+
+    public static final String VERSION = "1.1.0";
     public static final File BOT_JAR_FILE = new File("./Yui.jar");
     public static final File BOT_JAR_FILE_OLD = new File("OLD_" + BOT_JAR_FILE.getName());
 
@@ -146,7 +151,7 @@ public class Bootstrap
 
     private static boolean downloadBot(boolean useBetaBuilds)
     {
-        String downloadUrl = useBetaBuilds ? BUILD_BUILD_DOWNLOAD_URL : RECOMMENDED_BUILD_DOWNLOAD_URL;
+        String downloadUrl = useBetaBuilds ? getLatestBetaUrl() : getLatestRecommendedUrl();
         for (int i = 0; i < 3 && !BOT_JAR_FILE.exists(); i++)
         {
             try
@@ -176,5 +181,31 @@ public class Bootstrap
             }
         }
         return false;
+    }
+
+    public static String getLatestRecommendedUrl()
+    {
+        String page = Downloader.webpage(RECOMMENDED_BUILD_ROOT);
+        Pattern urlPattern = Pattern.compile(URL_REGEX);
+        Matcher urlMatcher = urlPattern.matcher(page);
+        if (urlMatcher.find())
+        {
+            return RECOMMENDED_BUILD_ROOT + urlMatcher.group(1);
+        }
+        else
+            throw new RuntimeException("Could not find Recommended URL.");
+    }
+
+    public static String getLatestBetaUrl()
+    {
+        String page = Downloader.webpage(BETA_BUILD_ROOT);
+        Pattern urlPattern = Pattern.compile(URL_REGEX);
+        Matcher urlMatcher = urlPattern.matcher(page);
+        if (urlMatcher.find())
+        {
+            return BETA_BUILD_ROOT + urlMatcher.group(1);
+        }
+        else
+            throw new RuntimeException("Could not find Beta URL.");
     }
 }
