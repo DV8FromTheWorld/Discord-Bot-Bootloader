@@ -38,8 +38,8 @@ public class Bootstrap
     public static final int DOWNLOAD_FAILED = 51;
     public static final int UPDATED_FAILED = 52;
 
-    public static final String[] START_BOT_COMMAND = new String[] {
-        "java", "-Dfile.encoding=UTF-8", "-jar", BOT_JAR_FILE.getPath()
+    public static String[] START_BOT_COMMAND = new String[] {
+        "java", "-Djava.io.tmpfile=%s", "-Dfile.encoding=UTF-8", "-jar", BOT_JAR_FILE.getPath()
     };
 
     enum UpdateStatus
@@ -77,6 +77,7 @@ public class Bootstrap
             ProcessBuilder builder = new ProcessBuilder();
             builder.environment().put("BootstrapVersion", VERSION);
             builder.inheritIO();
+            START_BOT_COMMAND[1] = "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir");
             builder.command(START_BOT_COMMAND);
             if (!updateStatus.equals(UpdateStatus.NONE))
             {
