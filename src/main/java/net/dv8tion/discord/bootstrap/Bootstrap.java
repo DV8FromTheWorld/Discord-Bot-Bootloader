@@ -10,8 +10,7 @@ import java.util.regex.Pattern;
 public class Bootstrap
 {
 
-    public static final String RECOMMENDED_BUILD_ROOT = "http://home.dv8tion.net:8080/job/Yui/Promoted%20Build/artifact/build/libs/";
-    public static final String BETA_BUILD_ROOT = "http://home.dv8tion.net:8080/job/Yui/lastCompletedBuild/artifact/build/libs/";
+    public static final String LATEST_BUILD_ROOT = "https://ci.dv8tion.net/job/Yui/lastCompletedBuild/artifact/build/libs/";
     public static final String URL_REGEX = "\\<a href=\"Yui-withDependencies-[0-9]*\\.[0-9]*\\.[0-9]*_[0-9]*\\.jar\">(Yui-withDependencies-[0-9]*\\.[0-9]*\\.[0-9]*_[0-9]*\\.jar)\\<\\/a\\>";
 
     public static final String VERSION = "1.1.0";
@@ -25,8 +24,7 @@ public class Bootstrap
     public static final int NEWLY_CREATED_CONFIG = 12;
 
     //Non error, action required exit codes.
-    public static final int UPDATE_LATEST_EXITCODE = 20;
-    public static final int UPDATE_RECOMMENDED_EXITCODE = 21;
+    public static final int UPDATE_TO_LATEST_BUILD_EXITCODE = 20;
 
     //error exit codes.
     public static final int UNABLE_TO_CONNECT_TO_DISCORD = 30;
@@ -63,7 +61,7 @@ public class Bootstrap
     {        
         if (!BOT_JAR_FILE.exists())
         {
-            if (!downloadBot(false))
+            if (!downloadBot())
             {
                 System.out.println("Could not download Bot. Check Internet Connection and File System.");
                 System.exit(DOWNLOAD_FAILED);
@@ -96,9 +94,8 @@ public class Bootstrap
                 case RESTART_EXITCODE:
                     System.out.println("Bot stopped due to restart request. Restarting...");
                     break;
-                case UPDATE_LATEST_EXITCODE:
-                case UPDATE_RECOMMENDED_EXITCODE:
-                    updateStatus = updateBot(botProcess.exitValue()) ? UpdateStatus.SUCCESSFUL : UpdateStatus.FAILED;
+                case UPDATE_TO_LATEST_BUILD_EXITCODE:
+                    updateStatus = updateBot() ? UpdateStatus.SUCCESSFUL : UpdateStatus.FAILED;
                     break;
                 case NEWLY_CREATED_CONFIG:
                     //TODO: More to work on.
@@ -122,7 +119,7 @@ public class Bootstrap
         }
     }
 
-    private static boolean updateBot(int updateCode)
+    private static boolean updateBot()
     {
         try
         {
@@ -130,7 +127,7 @@ public class Bootstrap
                     BOT_JAR_FILE.toPath(),
                     BOT_JAR_FILE_OLD.toPath(),
                     StandardCopyOption.REPLACE_EXISTING);
-            if (!downloadBot(updateCode == UPDATE_LATEST_EXITCODE))
+            if (!downloadBot())
             {
                 Files.move(
                         BOT_JAR_FILE_OLD.toPath(),
@@ -150,9 +147,9 @@ public class Bootstrap
         }
     }
 
-    private static boolean downloadBot(boolean useBetaBuilds)
+    private static boolean downloadBot()
     {
-        String downloadUrl = useBetaBuilds ? getLatestBetaUrl() : getLatestRecommendedUrl();
+        String downloadUrl = getLatestBuildUrl();
         for (int i = 0; i < 3 && !BOT_JAR_FILE.exists(); i++)
         {
             try
@@ -184,29 +181,16 @@ public class Bootstrap
         return false;
     }
 
-    public static String getLatestRecommendedUrl()
+    public static String getLatestBuildUrl()
     {
-        String page = Downloader.webpage(RECOMMENDED_BUILD_ROOT);
+        String page = Downloader.webpage(LATEST_BUILD_ROOT);
         Pattern urlPattern = Pattern.compile(URL_REGEX);
         Matcher urlMatcher = urlPattern.matcher(page);
         if (urlMatcher.find())
         {
-            return RECOMMENDED_BUILD_ROOT + urlMatcher.group(1);
+            return LATEST_BUILD_ROOT + urlMatcher.group(1);
         }
         else
             throw new RuntimeException("Could not find Recommended URL.");
-    }
-
-    public static String getLatestBetaUrl()
-    {
-        String page = Downloader.webpage(BETA_BUILD_ROOT);
-        Pattern urlPattern = Pattern.compile(URL_REGEX);
-        Matcher urlMatcher = urlPattern.matcher(page);
-        if (urlMatcher.find())
-        {
-            return BETA_BUILD_ROOT + urlMatcher.group(1);
-        }
-        else
-            throw new RuntimeException("Could not find Beta URL.");
     }
 }
