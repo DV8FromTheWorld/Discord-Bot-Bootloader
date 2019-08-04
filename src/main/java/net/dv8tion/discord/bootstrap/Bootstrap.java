@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 
 public class Bootstrap
 {
-
     public static final String LATEST_BUILD_ROOT = "https://ci.dv8tion.net/job/Yui/lastCompletedBuild/artifact/build/libs/";
     public static final String URL_REGEX = "\\<a href=\"Yui-withDependencies-[0-9]*\\.[0-9]*\\.[0-9]*_[0-9]*\\.jar\">(Yui-withDependencies-[0-9]*\\.[0-9]*\\.[0-9]*_[0-9]*\\.jar)\\<\\/a\\>";
 
