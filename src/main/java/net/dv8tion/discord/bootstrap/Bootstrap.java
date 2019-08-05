@@ -185,7 +185,6 @@ public class Bootstrap
         String page = Downloader.webpage(LATEST_BUILD_ROOT);
         Pattern urlPattern = Pattern.compile(URL_REGEX);
         Matcher urlMatcher = urlPattern.matcher(page);
-        System.out.println(page);
         if (urlMatcher.find())
         {
             return LATEST_BUILD_ROOT + urlMatcher.group(1);
